@@ -8,11 +8,14 @@ export default function GenerarVideoPage() {
   const [propiedad, setPropiedad] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
+  const [generando, setGenerando] = useState(false);
+  const [mensaje, setMensaje] = useState(null);
 
   const buscarPropiedad = async () => {
     setCargando(true);
     setError(null);
     setPropiedad(null);
+    setMensaje(null);
 
     try {
       const res = await fetch(`/api/propiedad?codigo=${codigo}`);
@@ -29,6 +32,23 @@ export default function GenerarVideoPage() {
       setError('Error al buscar propiedad');
     } finally {
       setCargando(false);
+    }
+  };
+
+  const generarVideo = async () => {
+    setGenerando(true);
+    setMensaje(null);
+    setError(null);
+    try {
+      const res = await fetch(`http://localhost:5000/generar-video?codigo=${codigo}`);
+      const text = await res.text();
+      if (!res.ok) throw new Error(text);
+      setMensaje(text);
+    } catch (err) {
+      console.error(err);
+      setError('No se pudo generar el video. ¿Está abierto el ejecutor local?');
+    } finally {
+      setGenerando(false);
     }
   };
 
@@ -55,6 +75,7 @@ export default function GenerarVideoPage() {
 
         {cargando && <p>Cargando propiedad...</p>}
         {error && <p style={{ color: 'red' }}>{error}</p>}
+        {mensaje && <p style={{ color: 'green' }}>{mensaje}</p>}
 
         {propiedad && (
           <div>
@@ -80,7 +101,13 @@ export default function GenerarVideoPage() {
               })}
             </div>
 
-            <button style={{ padding: '10px 20px', fontSize: 16 }}>Generar video</button>
+            <button
+              onClick={generarVideo}
+              style={{ padding: '10px 20px', fontSize: 16 }}
+              disabled={generando}
+            >
+              {generando ? 'Generando...' : 'Generar video'}
+            </button>
           </div>
         )}
       </div>
